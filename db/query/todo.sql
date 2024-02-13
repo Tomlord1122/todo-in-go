@@ -10,13 +10,13 @@ INSERT INTO todos (
 ) RETURNING *;
 
 
---name: GetTodo :one
+-- name: GetTodo :one
 SELECT * FROM todos WHERE id = $1;
 
---name: GetTodos :many
-SELECT * FROM todos WHERE owner = $1;
+-- name: GetTodos :many
+SELECT * FROM todos LIMIT $1 OFFSET $2;
 
---name: UpdateTodo :one
+-- name: UpdateTodo :one
 UPDATE todos SET
     "title" = $2,
     "category" = $3,
@@ -25,5 +25,5 @@ UPDATE todos SET
 WHERE id = $1
 RETURNING *;
 
---name: DeleteTodo :one
+-- name: DeleteTodo :exec
 DELETE FROM todos WHERE id = $1;

@@ -5,7 +5,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createTodo = `-- name: CreateTodo :one
@@ -21,16 +20,120 @@ INSERT INTO todos (
 `
 
 type CreateTodoParams struct {
-	Owner       string         `json:"owner"`
-	Title       string         `json:"title"`
-	Category    string         `json:"category"`
-	Description sql.NullString `json:"description"`
-	Completed   bool           `json:"completed"`
+	Owner       string `json:"owner"`
+	Title       string `json:"title"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
 }
 
 func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error) {
 	row := q.db.QueryRowContext(ctx, createTodo,
 		arg.Owner,
+		arg.Title,
+		arg.Category,
+		arg.Description,
+		arg.Completed,
+	)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Title,
+		&i.Category,
+		&i.Description,
+		&i.Completed,
+	)
+	return i, err
+}
+
+const deleteTodo = `-- name: DeleteTodo :exec
+DELETE FROM todos WHERE id = $1
+`
+
+func (q *Queries) DeleteTodo(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteTodo, id)
+	return err
+}
+
+const getTodo = `-- name: GetTodo :one
+SELECT id, owner, title, category, description, completed FROM todos WHERE id = $1
+`
+
+func (q *Queries) GetTodo(ctx context.Context, id int64) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, getTodo, id)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Title,
+		&i.Category,
+		&i.Description,
+		&i.Completed,
+	)
+	return i, err
+}
+
+const getTodos = `-- name: GetTodos :many
+SELECT id, owner, title, category, description, completed FROM todos LIMIT $1 OFFSET $2
+`
+
+type GetTodosParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetTodos(ctx context.Context, arg GetTodosParams) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, getTodos, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.Owner,
+			&i.Title,
+			&i.Category,
+			&i.Description,
+			&i.Completed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTodo = `-- name: UpdateTodo :one
+UPDATE todos SET
+    "title" = $2,
+    "category" = $3,
+    "description" = $4,
+    "completed" = $5
+WHERE id = $1
+RETURNING id, owner, title, category, description, completed
+`
+
+type UpdateTodoParams struct {
+	ID          int64  `json:"id"`
+	Title       string `json:"title"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, updateTodo,
+		arg.ID,
 		arg.Title,
 		arg.Category,
 		arg.Description,

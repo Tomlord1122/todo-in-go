@@ -2,15 +2,13 @@
 
 package db
 
-import (
-	"database/sql"
-)
+import ()
 
 type Todo struct {
-	ID          int64          `json:"id"`
-	Owner       string         `json:"owner"`
-	Title       string         `json:"title"`
-	Category    string         `json:"category"`
-	Description sql.NullString `json:"description"`
-	Completed   bool           `json:"completed"`
+	ID          int64  `json:"id"`
+	Owner       string `json:"owner"`
+	Title       string `json:"title"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
 }
