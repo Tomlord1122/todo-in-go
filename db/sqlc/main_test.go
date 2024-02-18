@@ -7,24 +7,25 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Tomlord1122/todo-in-go/util"
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@localhost:5432/todo?sslmode=disable"
-)
-
 var testQueries *Queries
+var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(dbDriver, dbSource) // return a connection object and an error
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+
+	testDB, err = sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
 
-	testQueries = New(conn) // create a new Queries object
-	// m.Run() runs the tests
-	// os.Exit() exits the program with the status code returned by m.Run()
-	os.Exit(m.Run()) // run the tests
+	testQueries = New(testDB)
+
+	os.Exit(m.Run())
 }

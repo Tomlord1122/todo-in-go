@@ -64,12 +64,12 @@ func TestGetsTodo(t *testing.T) {
 		createRandomTodo(t)
 	}
 
-	arg := GetTodosParams{
+	arg := ListTodosParams{
 		Limit:  5,
 		Offset: 5,
 	}
 
-	todos, err := testQueries.GetTodos(context.Background(), arg)
+	todos, err := testQueries.ListTodos(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, todos, 5)
 

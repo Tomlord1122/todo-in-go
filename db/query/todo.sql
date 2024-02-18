@@ -13,7 +13,7 @@ INSERT INTO todos (
 -- name: GetTodo :one
 SELECT * FROM todos WHERE id = $1;
 
--- name: GetTodos :many
+-- name: ListTodos :many
 SELECT * FROM todos LIMIT $1 OFFSET $2;
 
 -- name: UpdateTodo :one
